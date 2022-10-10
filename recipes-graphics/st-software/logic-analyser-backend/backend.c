@@ -1034,6 +1034,7 @@ fwrunning:
             }
         }
         sleep_ms(1);      // give time to UI
+        single_clicked();
     }
     for (i=0;i<NB_BUF;i++){
         int rc = munmap(mmappedData[i], DATA_BUF_POOL_SIZE);
