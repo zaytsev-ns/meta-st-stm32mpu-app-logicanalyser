@@ -408,6 +408,34 @@ print_time() {
     clock_gettime(1, &ts);
     printf("Time: %lld\n", (ts.tv_sec * 1000LL) + (ts.tv_nsec / 1000000LL));
 }
+
+void doIT() {
+char setData = 'n';
+    if (mMachineState == STATE_READY) {
+        if (mSampFreq_Hz > 5) {
+            mMachineState = STATE_SAMPLING_HIGH;
+        } else {
+            mMachineState = STATE_SAMPLING_LOW;
+        }
+        mNbUncompData=0;
+        mNbPrevUncompMB = 0;
+        mNbUncompMB = 0;
+        mNbWrittenInFileData=0;
+        mDdrBuffAwaited=0;
+        mNbTty0Frame=0;
+        // build sampling string
+        sprintf(mSamplingStr, "S%03dMs%c", mSampFreq_Hz, setData);
+        printf("CA7 : Start sampling at %dMHz\n", mSampFreq_Hz);
+        virtual_tty_send_command(strlen(mSamplingStr), mSamplingStr);
+    } else if (mMachineState >= STATE_SAMPLING_LOW) {
+        mMachineState = STATE_READY;
+        printf("CA7 : Stop sampling\n");
+        virtual_tty_send_command(strlen("Exit"), "Exit");
+    } else {
+        printf("CA7 : Start sampling param error: mMachineState=%d mSampFreq_Hz=%d \n",
+            mMachineState, mSampFreq_Hz);
+    }
+}
  
 /********************************************************************************
 GTK UI functions
@@ -472,36 +500,7 @@ static gboolean refreshUI_CB (gpointer data)
  
 static void single_clicked (GtkWidget *widget, gpointer data)
 {
-    char setData = 'n';
-    if (mMachineState == STATE_READY) {
-        if (mSampFreq_Hz > 5) {
-            mMachineState = STATE_SAMPLING_HIGH;
-        } else {
-            mMachineState = STATE_SAMPLING_LOW;
-        }
-        mNbUncompData=0;
-        mNbPrevUncompMB = 0;
-        mNbUncompMB = 0;
-        mNbWrittenInFileData=0;
-        mDdrBuffAwaited=0;
-        mNbTty0Frame=0;
-        if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (notchSetdata))) {
-            setData = 'y';
-        }
-        // build sampling string
-        sprintf(mSamplingStr, "S%03dMs%c", mSampFreq_Hz, setData);
-        printf("CA7 : Start sampling at %dMHz\n", mSampFreq_Hz);
-        virtual_tty_send_command(strlen(mSamplingStr), mSamplingStr);
-        gdk_threads_add_idle (refreshUI_CB, window);
-    } else if (mMachineState >= STATE_SAMPLING_LOW) {
-        mMachineState = STATE_READY;
-        printf("CA7 : Stop sampling\n");
-        virtual_tty_send_command(strlen("Exit"), "Exit");
-        gdk_threads_add_idle (refreshUI_CB, window);
-    } else {
-        printf("CA7 : Start sampling param error: mMachineState=%d mSampFreq_Hz=%d \n",
-            mMachineState, mSampFreq_Hz);
-    }
+    //stub for gtk
 }
  
 static void f_scale_moved (GtkRange *range, gpointer user_data)
@@ -1034,7 +1033,7 @@ fwrunning:
             }
         }
         sleep_ms(1);      // give time to UI
-        single_clicked();
+        doIT();
     }
     for (i=0;i<NB_BUF;i++){
         int rc = munmap(mmappedData[i], DATA_BUF_POOL_SIZE);
