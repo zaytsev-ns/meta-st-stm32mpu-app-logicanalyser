@@ -427,13 +427,6 @@ char setData = 'n';
         sprintf(mSamplingStr, "S%03dMs%c", mSampFreq_Hz, setData);
         printf("CA7 : Start sampling at %dMHz\n", mSampFreq_Hz);
         virtual_tty_send_command(strlen(mSamplingStr), mSamplingStr);
-    } else if (mMachineState >= STATE_SAMPLING_LOW) {
-        mMachineState = STATE_READY;
-        printf("CA7 : Stop sampling\n");
-        virtual_tty_send_command(strlen("Exit"), "Exit");
-    } else {
-        printf("CA7 : Start sampling param error: mMachineState=%d mSampFreq_Hz=%d \n",
-            mMachineState, mSampFreq_Hz);
     }
 }
  
